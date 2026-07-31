@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Cuisine — Burger Party</title>
+    <meta name="theme-color" content="#0e0d0c" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex" />
+
+    <link rel="preconnect" href="https://eqbvfhhxrovsscldcgfh.supabase.co" crossorigin />
+    <link rel="stylesheet" href="/assets/css/app.css" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍🍳</text></svg>" />
+  </head>
+
+  <body>
+    <!-- Garde-fou : évite les ouvertures accidentelles, ce n'est pas un secret -->
+    <section class="gate" id="gate">
+      <p style="font-size: 3rem">👨‍🍳</p>
+      <h2>Écran cuisine</h2>
+      <div class="field">
+        <label class="sr-only" for="code">Code d'accès</label>
+        <input
+          class="input"
+          id="code"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          enterkeyhint="go"
+          placeholder="Code"
+          style="text-align: center; letter-spacing: 0.3em"
+        />
+      </div>
+      <button class="btn btn--primary btn--block" id="gate-btn" type="button">Entrer</button>
+    </section>
+
+    <div class="hidden" id="console">
+      <header class="topbar">
+        <div class="topbar__inner" style="max-width: 60rem">
+          <span class="topbar__title" style="flex: 1">Cuisine</span>
+          <span class="live" id="live" data-live="off">hors ligne</span>
+        </div>
+      </header>
+
+      <main class="kitchen">
+        <div class="stack-lg" style="padding-top: var(--sp-5)">
+          <div class="stats">
+            <div class="stat">
+              <p class="stat__num" id="stat-total">0</p>
+              <p class="stat__label">commandes</p>
+            </div>
+            <div class="stat">
+              <p class="stat__num" id="stat-todo">0</p>
+              <p class="stat__label">à faire</p>
+            </div>
+            <div class="stat">
+              <p class="stat__num" id="stat-served">0</p>
+              <p class="stat__label">servies</p>
+            </div>
+          </div>
+
+          <div class="tabs" role="tablist">
+            <button class="tab" id="tab-orders" role="tab" aria-selected="true" type="button">
+              Commandes
+            </button>
+            <button class="tab" id="tab-tally" role="tab" aria-selected="false" type="button">
+              Récap cuisine
+            </button>
+          </div>
+
+          <!-- Onglet commandes -->
+          <section id="view-orders" role="tabpanel" aria-labelledby="tab-orders">
+            <div class="stack">
+              <div class="chips chips--filters">
+                <button class="chip chip--pick" id="filter-served" type="button" aria-pressed="false">
+                  Masquer les servies
+                </button>
+                <button class="chip chip--pick" id="toggle-open" type="button" aria-pressed="false">
+                  Commandes ouvertes
+                </button>
+              </div>
+              <div class="orders" id="orders"></div>
+            </div>
+          </section>
+
+          <!-- Onglet récap -->
+          <section id="view-tally" class="hidden" role="tabpanel" aria-labelledby="tab-tally">
+            <div class="stack-lg">
+              <div class="stack">
+                <p class="section-label">Burgers à préparer</p>
+                <div class="tally" id="tally-burgers"></div>
+              </div>
+              <div class="stack">
+                <p class="section-label">Cuissons</p>
+                <div class="tally" id="tally-cooking"></div>
+              </div>
+              <div class="stack">
+                <p class="section-label">Sans (à retirer)</p>
+                <div class="tally" id="tally-removed"></div>
+              </div>
+              <div class="stack">
+                <p class="section-label">Accompagnements</p>
+                <div class="tally" id="tally-sides"></div>
+              </div>
+              <div class="stack">
+                <p class="section-label">Boissons</p>
+                <div class="tally" id="tally-drinks"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script type="module" src="/assets/js/kitchen.js"></script>
+  </body>
+</html>

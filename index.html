@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Burger Party — passe ta commande</title>
+    <meta name="description" content="Choisis ton burger, ta cuisson et tes accompagnements. La cuisine reçoit tout en direct." />
+    <meta name="theme-color" content="#0e0d0c" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="robots" content="noindex" />
+
+    <link rel="preconnect" href="https://eqbvfhhxrovsscldcgfh.supabase.co" crossorigin />
+    <link rel="stylesheet" href="/assets/css/app.css" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍔</text></svg>" />
+    <link rel="modulepreload" href="/assets/js/api.js" />
+  </head>
+
+  <body>
+    <header class="topbar">
+      <div class="topbar__inner">
+        <button class="iconbtn hidden" id="back" type="button" aria-label="Étape précédente">←</button>
+        <span class="topbar__title" id="party-name">Burger Party</span>
+        <span class="topbar__title" id="step-counter" style="flex: none"></span>
+      </div>
+      <div class="progress" aria-hidden="true"><div class="progress__bar" id="progress"></div></div>
+    </header>
+
+    <main class="app" id="app">
+      <!-- 1 — Accueil ------------------------------------------------- -->
+      <section class="step" id="step-welcome">
+        <div class="stack-lg">
+          <div class="stack">
+            <p class="eyebrow">Service du soir</p>
+            <h1>Ce soir,<br />c'est burgers 🍔</h1>
+            <p class="lede" id="welcome-message">
+              Compose ta commande comme au fast-food. La cuisine reçoit tout en direct.
+            </p>
+          </div>
+
+          <div class="field">
+            <label class="section-label" for="guest-name">Ton prénom</label>
+            <input
+              class="input"
+              id="guest-name"
+              type="text"
+              autocomplete="given-name"
+              enterkeyhint="go"
+              maxlength="40"
+              placeholder="Alexis"
+              required
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- 2 — Choix du burger ----------------------------------------- -->
+      <section class="step hidden" id="step-burger">
+        <div class="stack-lg">
+          <div class="stack">
+            <p class="eyebrow">Étape 1</p>
+            <h2>Choisis ton burger</h2>
+          </div>
+          <div class="cards" id="burger-list" role="group" aria-label="Burgers disponibles">
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3 — Personnalisation ---------------------------------------- -->
+      <section class="step hidden" id="step-custom">
+        <div class="stack-lg">
+          <div class="stack">
+            <p class="eyebrow">Étape 2</p>
+            <h2 id="custom-title">Personnalise-le</h2>
+            <p class="lede">Touche un ingrédient pour le retirer.</p>
+          </div>
+
+          <div class="stack">
+            <p class="section-label">Ingrédients</p>
+            <div class="chips" id="ingredient-list" role="group" aria-label="Ingrédients à retirer"></div>
+          </div>
+
+          <div class="stack hidden" id="cooking-block">
+            <p class="section-label">Cuisson de la viande</p>
+            <div class="segmented" id="cooking-list" role="group" aria-label="Cuisson"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 — Accompagnements ----------------------------------------- -->
+      <section class="step hidden" id="step-extras">
+        <div class="stack-lg">
+          <div class="stack">
+            <p class="eyebrow">Étape 3</p>
+            <h2>Avec ça ?</h2>
+            <p class="lede">Autant que tu veux, ou rien du tout.</p>
+          </div>
+
+          <div class="stack">
+            <p class="section-label">Accompagnements</p>
+            <div class="chips" id="side-list" role="group" aria-label="Accompagnements"></div>
+          </div>
+
+          <div class="stack">
+            <p class="section-label">Boissons</p>
+            <div class="chips" id="drink-list" role="group" aria-label="Boissons"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5 — Récapitulatif ------------------------------------------- -->
+      <section class="step hidden" id="step-recap">
+        <div class="stack-lg">
+          <div class="stack">
+            <p class="eyebrow">Dernière étape</p>
+            <h2>On récapitule</h2>
+          </div>
+
+          <div class="panel" id="recap"></div>
+
+          <div class="field">
+            <label class="section-label" for="note">Un mot pour la cuisine ? (facultatif)</label>
+            <textarea
+              class="textarea"
+              id="note"
+              maxlength="200"
+              placeholder="Allergie aux fruits à coque, double sauce, pas trop de sel…"
+            ></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6 — Ticket --------------------------------------------------- -->
+      <section class="step hidden" id="step-ticket">
+        <div class="stack-lg">
+          <div class="ticket">
+            <p class="ticket__label">Commande</p>
+            <p class="ticket__num" id="ticket-num">—</p>
+            <p class="ticket__label" id="ticket-name"></p>
+            <div style="margin-top: var(--sp-4)">
+              <span class="badge" id="ticket-status">Nouvelle</span>
+            </div>
+          </div>
+
+          <div class="panel" id="ticket-detail"></div>
+
+          <p class="lede" style="text-align: center; font-size: var(--fs-sm)">
+            Garde cette page ouverte : le statut se met à jour tout seul.
+          </p>
+        </div>
+      </section>
+
+      <!-- Commandes fermées -------------------------------------------- -->
+      <section class="step hidden" id="step-closed">
+        <div class="stack-lg" style="text-align: center; padding-top: var(--sp-6)">
+          <p style="font-size: 3.5rem">🔒</p>
+          <h2>Les commandes sont closes</h2>
+          <p class="lede" id="closed-message">Le service a démarré. Va voir en cuisine !</p>
+        </div>
+      </section>
+    </main>
+
+    <div class="dock hidden" id="dock">
+      <div class="dock__inner">
+        <button class="btn btn--primary btn--block" id="cta" type="button">Continuer</button>
+        <button class="btn btn--danger btn--block btn--sm hidden" id="cta-secondary" type="button"></button>
+        <p class="dock__hint hidden" id="dock-hint"></p>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script type="module" src="/assets/js/order.js"></script>
+  </body>
+</html>
