@@ -302,6 +302,53 @@ h2 {
   color: var(--c-orange);
 }
 
+/* Flammes autocollantes autour du mot vedette. Chaque flamme reçoit sa
+   rotation (--r), son délai (--d) et sa durée (--t) en HTML, pour qu'aucune
+   ne danse en même temps qu'une autre. */
+.pop--hot {
+  position: relative;
+  display: inline-block;
+}
+
+/* La zone déborde du mot : les flammes vivent autour des lettres, jamais
+   par-dessus. Elles montent au-dessus et sur la droite — le sens du feu. */
+.flames {
+  position: absolute;
+  inset: -0.5em -0.55em;
+  pointer-events: none;
+}
+
+.flames i {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  font-size: 0.42em;
+  line-height: 1;
+  /* Contour blanc épais + ombre décalée : le vocabulaire des stickers */
+  filter: drop-shadow(1.5px 0 0 var(--c-paper))
+    drop-shadow(-1.5px 0 0 var(--c-paper))
+    drop-shadow(0 1.5px 0 var(--c-paper))
+    drop-shadow(0 -1.5px 0 var(--c-paper)) drop-shadow(2px 3px 0 #24120940);
+  animation: flame-dance var(--t, 2s) ease-in-out var(--d, 0s) infinite;
+}
+
+.flames i::before {
+  content: "🔥";
+}
+
+/* Le translate centre la flamme sur son point d'ancrage ; il fait partie des
+   keyframes, sinon l'animation l'écraserait. */
+@keyframes flame-dance {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--r)) scale(var(--s, 1));
+  }
+  50% {
+    transform: translate(-50%, -74%) rotate(calc(var(--r) + 12deg))
+      scale(calc(var(--s, 1) * 1.16));
+  }
+}
+
 h3 {
   font-size: var(--fs-md);
   font-weight: 700;
@@ -485,7 +532,7 @@ h3 {
 .card {
   position: relative;
   display: grid;
-  grid-template-columns: 5.5rem 1fr;
+  grid-template-columns: 6.5rem 1fr;
   gap: var(--sp-3);
   align-items: start;
   width: 100%;
@@ -528,8 +575,8 @@ h3 {
 .card__visual {
   display: grid;
   place-items: center;
-  width: 5.5rem;
-  height: 5.5rem;
+  width: 6.5rem;
+  height: 6.5rem;
   padding: 2px;
   overflow: hidden;
   font-size: 2.25rem;
