@@ -95,6 +95,9 @@ body {
     repeating-linear-gradient(to bottom, #f2652226 0 1px, transparent 1px 28px);
   -webkit-font-smoothing: antialiased;
   overflow-wrap: break-word;
+  /* Filet de sécurité : aucun rebond ne doit créer de scroll horizontal.
+     `clip` plutôt que `hidden` pour ne pas casser les positions sticky. */
+  overflow-x: clip;
 }
 
 img,
@@ -239,13 +242,26 @@ button {
 .step {
   padding-top: var(--sp-5);
   padding-bottom: var(--sp-6);
-  animation: step-in 0.32s var(--ease) both;
+  /* Le sens dépend de la navigation : on avance vers la gauche, on
+     revient vers la droite. Le geste raconte où on est dans le parcours. */
+  animation: step-forward 0.38s var(--ease) backwards;
 }
 
-@keyframes step-in {
+.step[data-dir="back"] {
+  animation-name: step-back;
+}
+
+@keyframes step-forward {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translate3d(22px, 6px, 0);
+  }
+}
+
+@keyframes step-back {
+  from {
+    opacity: 0;
+    transform: translate3d(-22px, 6px, 0);
   }
 }
 
@@ -348,6 +364,8 @@ h3 {
 /* ------------------------------------------------------------- Boutons -- */
 
 .btn {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -378,6 +396,36 @@ h3 {
 .btn--primary {
   color: var(--c-paper);
   background: var(--c-orange);
+}
+
+/* Reflet qui balaie le bouton actif : ça attire l'œil sans clignoter */
+.btn--primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 42%,
+    #ffffff4d 50%,
+    transparent 58%
+  );
+  transform: translateX(-130%);
+  pointer-events: none;
+}
+
+.btn--primary:not([disabled])::after {
+  animation: sheen 4.5s ease-in-out 1s infinite;
+}
+
+@keyframes sheen {
+  0%,
+  55% {
+    transform: translateX(-130%);
+  }
+  85%,
+  100% {
+    transform: translateX(130%);
+  }
 }
 
 .btn--ghost {
@@ -437,7 +485,7 @@ h3 {
 .card {
   position: relative;
   display: grid;
-  grid-template-columns: 3.5rem 1fr;
+  grid-template-columns: 5.5rem 1fr;
   gap: var(--sp-3);
   align-items: start;
   width: 100%;
@@ -451,6 +499,19 @@ h3 {
     background 0.15s var(--ease);
 }
 
+/* Les cartes arrivent en cascade, comme une pile qu'on étale */
+.cards .card {
+  animation: card-in 0.5s var(--ease) backwards;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0) rotate(-1.5deg);
+  }
+}
+
 .card:active {
   transform: translate(3px, 3px);
   box-shadow: 1px 1px 0 var(--c-ink);
@@ -462,15 +523,31 @@ h3 {
   box-shadow: 5px 5px 0 var(--c-ink);
 }
 
-.card__emoji {
+/* Tuile blanche : les photos ont des fonds différents (blanc, transparent),
+   `contain` sur blanc les fait toutes se fondre de la même façon. */
+.card__visual {
   display: grid;
   place-items: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  font-size: 1.9rem;
-  background: var(--c-cream);
+  width: 5.5rem;
+  height: 5.5rem;
+  padding: 2px;
+  overflow: hidden;
+  font-size: 2.25rem;
+  background: var(--c-paper);
   border: var(--stroke) solid var(--c-ink);
   border-radius: var(--r-md);
+  transition: transform 0.3s var(--ease);
+}
+
+/* La vignette se décolle légèrement quand le burger est choisi */
+.card[aria-pressed="true"] .card__visual {
+  transform: rotate(-5deg) scale(1.06);
+}
+
+.card__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .card__body {
@@ -508,10 +585,12 @@ h3 {
   color: #b08e7a;
 }
 
+/* Dans le coin de la carte, pas en débord : sur un écran étroit, une
+   pastille qui dépasse se fait rogner par le bord de l'écran. */
 .card__check {
   position: absolute;
-  top: calc(var(--sp-3) * -1);
-  right: calc(var(--sp-3) * -1);
+  top: var(--sp-2);
+  right: var(--sp-2);
   display: grid;
   place-items: center;
   width: 2rem;
@@ -1061,6 +1140,99 @@ h3 {
 @keyframes pulse {
   50% {
     opacity: 0.3;
+  }
+}
+
+/* ==========================================================================
+   Animations du parcours invité
+   Uniquement transform et opacity : rien qui force un recalcul de mise en
+   page, donc rien qui saccade sur un téléphone.
+   ========================================================================== */
+
+/* Rebond au moment du choix — posé par JS, retiré à la fin de l'animation */
+.tap-pop {
+  animation: tap-pop 0.34s var(--ease);
+}
+
+@keyframes tap-pop {
+  35% {
+    transform: scale(1.09);
+  }
+  70% {
+    transform: scale(0.97);
+  }
+}
+
+/* Une carte occupe toute la largeur : même rebond, amplitude réduite,
+   sinon elle passe sous le bord de l'écran. */
+.card.tap-pop {
+  animation-name: tap-pop-wide;
+}
+
+@keyframes tap-pop-wide {
+  35% {
+    transform: scale(1.025);
+  }
+  70% {
+    transform: scale(0.992);
+  }
+}
+
+/* Le ticket s'imprime : le numéro tombe comme un tampon sur le papier */
+.ticket {
+  animation: ticket-in 0.5s var(--ease) backwards;
+}
+
+.ticket__num {
+  animation: stamp 0.5s var(--ease) 0.22s backwards;
+}
+
+.ticket .badge {
+  animation: stamp 0.45s var(--ease) 0.42s backwards;
+}
+
+@keyframes ticket-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -26px, 0) scale(0.96);
+  }
+}
+
+@keyframes stamp {
+  from {
+    opacity: 0;
+    transform: scale(2.2) rotate(-10deg);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(0.92) rotate(2deg);
+  }
+}
+
+/* Gerbe d'autocollants à la validation de la commande */
+.burst {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.burst span {
+  position: absolute;
+  bottom: 22vh;
+  font-size: 2rem;
+  animation: fly 1.15s cubic-bezier(0.2, 0.6, 0.4, 1) forwards;
+}
+
+@keyframes fly {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(var(--dx), -62vh, 0) rotate(var(--rot));
   }
 }
 

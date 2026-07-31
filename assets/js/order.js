@@ -94,6 +94,43 @@ function buzz(ms = 8) {
   if (navigator.vibrate) navigator.vibrate(ms);
 }
 
+const stillPreferred = () =>
+  matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/** Petit rebond sur l'élément qu'on vient de toucher. */
+function pop(node) {
+  node.classList.remove("tap-pop");
+  void node.offsetWidth; // force le redémarrage, même sur un double tap
+  node.classList.add("tap-pop");
+  node.addEventListener("animationend", () => node.classList.remove("tap-pop"), {
+    once: true,
+  });
+}
+
+const BURST = ["🍔", "🔥", "🧀", "🍟", "🥓", "🧅"];
+
+/** Gerbe d'autocollants à la validation — purement décoratif. */
+function burst() {
+  if (stillPreferred()) return;
+
+  const layer = document.createElement("div");
+  layer.className = "burst";
+  layer.setAttribute("aria-hidden", "true");
+
+  for (let i = 0; i < 12; i++) {
+    const sticker = document.createElement("span");
+    sticker.textContent = BURST[i % BURST.length];
+    sticker.style.left = `${6 + Math.random() * 88}vw`;
+    sticker.style.setProperty("--dx", `${(Math.random() - 0.5) * 44}vw`);
+    sticker.style.setProperty("--rot", `${(Math.random() - 0.5) * 720}deg`);
+    sticker.style.animationDelay = `${Math.random() * 0.2}s`;
+    layer.append(sticker);
+  }
+
+  document.body.append(layer);
+  setTimeout(() => layer.remove(), 1600);
+}
+
 const addonBySlug = (slug) => state.menu.addons.find((a) => a.slug === slug);
 const addonsIn = (category) =>
   state.menu.addons.filter((a) => a.category === category);
@@ -102,12 +139,17 @@ const burgerBySlug = (slug) => state.menu.burgers.find((b) => b.slug === slug);
 /* ------------------------------------------------------------- Navigation */
 
 function show(step) {
+  const from = STEPS.indexOf(state.step);
+  const to = STEPS.indexOf(step);
   state.step = step;
+
   for (const name of ["welcome", "burger", "custom", "extras", "recap", "ticket", "closed"]) {
     $(`step-${name}`).classList.toggle("hidden", name !== step);
   }
+  // Sens de l'animation : on ne « recule » que dans le parcours lui-même
+  $(`step-${step}`).dataset.dir = to >= 0 && from > to ? "back" : "forward";
 
-  const index = STEPS.indexOf(step);
+  const index = to;
   const isFlow = index >= 0;
 
   el.progress.style.width = isFlow
@@ -195,10 +237,16 @@ function renderDock() {
 function renderBurgers() {
   el.burgerList.innerHTML = state.menu.burgers
     .map(
-      (b) => `
+      (b, i) => `
       <button class="card" type="button" role="radio" data-slug="${esc(b.slug)}"
+              style="--i: ${i}"
               aria-pressed="${state.burger?.slug === b.slug}">
-        <span class="card__emoji" aria-hidden="true">${esc(b.emoji)}</span>
+        <span class="card__visual" aria-hidden="true">${
+          b.image_url
+            ? `<img class="card__photo" src="${esc(b.image_url)}" alt=""
+                    loading="lazy" decoding="async" data-emoji="${esc(b.emoji)}" />`
+            : esc(b.emoji)
+        }</span>
         <span class="card__body">
           <span class="card__name">${esc(b.name)}</span>
           ${b.tagline ? `<span class="card__tagline">${esc(b.tagline)}</span>` : ""}
@@ -364,6 +412,7 @@ async function submit() {
 
     renderTicket();
     show("ticket");
+    burst();
     buzz(20);
     toast("Commande envoyée en cuisine 🔥");
   } catch (error) {
@@ -426,6 +475,18 @@ el.guestName.addEventListener("keydown", (e) => {
   }
 });
 
+// Photo manquante ou cassée : on retombe sur l'emoji. Les erreurs de
+// chargement ne remontent pas, d'où l'écoute en phase de capture.
+el.burgerList.addEventListener(
+  "error",
+  (e) => {
+    const img = e.target;
+    if (img.tagName !== "IMG") return;
+    img.parentElement.textContent = img.dataset.emoji;
+  },
+  true,
+);
+
 el.burgerList.addEventListener("click", (e) => {
   const card = e.target.closest("[data-slug]");
   if (!card) return;
@@ -435,7 +496,12 @@ el.burgerList.addEventListener("click", (e) => {
     state.removed = new Set();
     state.cooking = null;
   }
-  renderBurgers();
+  // On bascule l'état sur place plutôt que de tout reconstruire : sinon
+  // les cartes rejouent leur entrée en cascade à chaque sélection.
+  for (const c of el.burgerList.children) {
+    c.setAttribute("aria-pressed", c.dataset.slug === next.slug);
+  }
+  pop(card);
   renderDock();
   buzz();
 });
@@ -446,6 +512,7 @@ el.ingredientList.addEventListener("click", (e) => {
   const ing = chip.dataset.ing;
   state.removed.has(ing) ? state.removed.delete(ing) : state.removed.add(ing);
   chip.setAttribute("aria-pressed", state.removed.has(ing));
+  pop(chip);
   buzz();
 });
 
@@ -456,6 +523,7 @@ el.cookingList.addEventListener("click", (e) => {
   for (const c of el.cookingList.children) {
     c.setAttribute("aria-pressed", c.dataset.cooking === state.cooking);
   }
+  pop(chip);
   renderDock();
   buzz();
 });
@@ -467,6 +535,7 @@ for (const list of [el.extraList, el.sauceList, el.sideList, el.drinkList]) {
     const slug = chip.dataset.addon;
     state.addons.has(slug) ? state.addons.delete(slug) : state.addons.add(slug);
     chip.setAttribute("aria-pressed", state.addons.has(slug));
+    pop(chip);
     buzz();
   });
 }

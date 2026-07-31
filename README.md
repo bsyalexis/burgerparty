@@ -101,6 +101,17 @@ La typo d'affichage est **Anton** (SIL Open Font License), auto-hébergée dans
 `assets/fonts/anton-latin.woff2` — 12 ko, sous-ensemble latin, préchargée.
 Aucune requête vers un CDN de polices.
 
+### Animations
+
+Le parcours invité est animé : entrée des étapes dans le sens de la
+navigation, cartes qui arrivent en cascade, rebond au moment du choix,
+vignette qui se décolle sur le burger sélectionné, ticket qui s'imprime avec
+son numéro tamponné, et une gerbe d'autocollants à la validation.
+
+Tout passe par `transform` et `opacity` — rien ne déclenche de recalcul de
+mise en page. Le bloc `@media (prefers-reduced-motion: reduce)` en haut de la
+feuille coupe l'ensemble d'un coup, et la gerbe ne se déclenche même pas.
+
 ---
 
 ## Structure
