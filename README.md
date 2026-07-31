@@ -14,12 +14,15 @@ Hébergé sur Vercel, données sur Supabase.
 | Écran | URL | Pour qui |
 | --- | --- | --- |
 | Commande | `/` | Les invités |
-| Cuisine | `/cuisine` | Toi |
+| Cuisine | `/cuisine-740e27` | Toi |
 
-L'écran cuisine demande un code, défini dans `assets/js/config.js`
+L'adresse de la cuisine est volontairement imprévisible : c'est elle, et non
+le code, qui empêche un invité de tomber dessus. Renommer le fichier
+`cuisine-740e27.html` change l'adresse ; `/cuisine` tout court renvoie un 404.
+
+L'écran demande ensuite un code, défini dans `assets/js/config.js`
 (`KITCHEN_CODE`). C'est un garde-fou contre les ouvertures accidentelles,
-**pas un secret** : le code est lisible dans le source. Change-le avant la
-soirée si tu tiens à ce que personne ne s'y balade.
+**pas un secret** : le code est lisible dans le source.
 
 ## Le parcours invité
 
@@ -104,7 +107,7 @@ Aucune requête vers un CDN de polices.
 
 ```
 index.html                      parcours de commande
-cuisine.html                    écran cuisine
+cuisine-740e27.html             écran cuisine (nom volontairement imprévisible)
 assets/css/app.css              tous les styles + les tokens de design
 assets/fonts/anton-latin.woff2  typo d'affichage, auto-hébergée
 assets/js/config.js             URL Supabase, clé publique, code cuisine, libellés
@@ -140,3 +143,8 @@ par invité). Les données concernées se limitent à des prénoms et des choix 
 burger. Si le lien devait circuler plus largement que prévu, ferme les
 commandes depuis l'écran cuisine — ou mets le projet en pause dans Supabase
 une fois la soirée finie.
+
+Dernier point : **si ce dépôt est public, l'adresse de la cuisine ne l'est
+plus.** Le nom du fichier suffit à la reconstituer. Passer le dépôt en privé
+(Settings → General → Danger Zone sur GitHub) est ce qui rend l'adresse
+réellement imprévisible.
