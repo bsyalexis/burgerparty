@@ -101,6 +101,22 @@ La typo d'affichage est **Anton** (SIL Open Font License), auto-hébergée dans
 `assets/fonts/anton-latin.woff2` — 12 ko, sous-ensemble latin, préchargée.
 Aucune requête vers un CDN de polices.
 
+### Ouverture
+
+À l'arrivée sur la page, « Ce soir / c'est » se tape à l'écran, puis un
+rouleau de machine à sous défile entre raclette, tacos, BBQ et burgers et
+retombe sur burgers. Les flammes s'allument, le reste de l'écran apparaît.
+
+Le rouleau est posé en **absolu par-dessus le mot final**, qui réserve la
+place : dans le flux, chaque mot changeait la largeur de la ligne et la page
+sautait. Le titre porte un `min-height` de deux lignes pour la même raison.
+Résultat : zéro décalage de mise en page pendant toute l'ouverture.
+
+L'animation ne joue **qu'une fois par session** — personne n'a envie de la
+revoir à chaque ouverture du lien — et un toucher la coupe. Elle est
+entièrement sautée si une commande existe déjà sur le téléphone, puisqu'on
+part alors droit sur le ticket.
+
 ### Animations
 
 Le parcours invité est animé : entrée des étapes dans le sens de la
@@ -121,8 +137,10 @@ index.html                      parcours de commande
 cuisine-740e27.html             écran cuisine (nom volontairement imprévisible)
 assets/css/app.css              tous les styles + les tokens de design
 assets/fonts/anton-latin.woff2  typo d'affichage, auto-hébergée
+assets/img/                     photos des burgers (voir le README du dossier)
 assets/js/config.js             URL Supabase, clé publique, code cuisine, libellés
 assets/js/api.js                client PostgREST minimal (fetch, zéro dépendance)
+assets/js/intro.js              ouverture : frappe, rouleau, flammes
 assets/js/order.js              machine à étapes du parcours invité
 assets/js/kitchen.js            liste temps réel + récap agrégé
 vercel.json                     URLs propres, cache, en-têtes

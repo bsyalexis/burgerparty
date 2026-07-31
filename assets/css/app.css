@@ -324,6 +324,9 @@ h2 {
   top: var(--y);
   font-size: 0.42em;
   line-height: 1;
+  /* Allumées par l'ouverture, en décalé */
+  opacity: 0;
+  transition: opacity 0.4s var(--ease) var(--d, 0s);
   /* Contour blanc épais + ombre décalée : le vocabulaire des stickers */
   filter: drop-shadow(1.5px 0 0 var(--c-paper))
     drop-shadow(-1.5px 0 0 var(--c-paper))
@@ -334,6 +337,80 @@ h2 {
 
 .flames i::before {
   content: "🔥";
+}
+
+.flames--lit i {
+  opacity: 1;
+}
+
+/* ------------------------------------------------------- Ouverture -- */
+
+/* Le titre réserve ses deux lignes dès le départ : pendant la frappe de la
+   première, la seconde est vide et ne créerait pas de ligne. */
+#step-welcome h1 {
+  min-height: 1.9em;
+}
+
+/* Curseur de frappe */
+.typing::after {
+  content: "";
+  display: inline-block;
+  width: 0.07em;
+  height: 0.72em;
+  margin-left: 0.06em;
+  background: currentColor;
+  animation: caret 0.75s steps(1) infinite;
+}
+
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Rouleau de machine à sous.
+   Posé en absolu par-dessus le mot final : dans le flux, il élargissait la
+   ligne à chaque mot et faisait sauter la page en disparaissant. Il déborde
+   sur la droite pour les mots plus longs, ce qui ne gêne personne — il n'y a
+   rien après. */
+.reel {
+  --reel-h: 0.95em;
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: hidden;
+  height: var(--reel-h);
+  line-height: var(--reel-h);
+  color: var(--c-orange);
+}
+
+/* Pendant le défilement, le mot final garde sa place sans se montrer */
+.pop--hot.is-rolling #hero-text {
+  visibility: hidden;
+}
+
+.reel__track {
+  display: block;
+  will-change: transform;
+}
+
+.reel__track span {
+  display: block;
+  height: var(--reel-h);
+  line-height: var(--reel-h);
+  white-space: nowrap;
+}
+
+/* Le reste de l'écran d'accueil, révélé une fois le mot tombé */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 12px, 0);
+  transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
+}
+
+.reveal--in {
+  opacity: 1;
+  transform: none;
 }
 
 /* Le translate centre la flamme sur son point d'ancrage ; il fait partie des

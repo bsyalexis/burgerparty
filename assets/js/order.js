@@ -4,6 +4,7 @@
  */
 
 import { COOKING, STATUS, ADDON_GROUPS } from "./config.js";
+import { playIntro, settleIntro } from "./intro.js";
 import {
   loadMenu,
   createOrder,
@@ -563,6 +564,17 @@ el.ctaSecondary.addEventListener("click", () => {
 /* ------------------------------------------------------------ Démarrage */
 
 async function init() {
+  // L'ouverture démarre tout de suite, en parallèle du chargement du menu.
+  // On la saute si ce téléphone a déjà une commande : il ira droit au ticket.
+  if (!localStorage.getItem(LS_ORDER)) {
+    playIntro().catch((error) => {
+      console.error(error);
+      settleIntro(); // un titre vide serait pire que pas d'animation
+    });
+  } else {
+    settleIntro();
+  }
+
   try {
     state.menu = await loadMenu();
   } catch (error) {
