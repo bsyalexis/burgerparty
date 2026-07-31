@@ -4,14 +4,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Burger Party — passe ta commande</title>
-    <meta name="description" content="Choisis ton burger, ta cuisson et tes accompagnements. La cuisine reçoit tout en direct." />
-    <meta name="theme-color" content="#0e0d0c" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="Choisis ton burger, tes suppléments et tes sauces. La cuisine reçoit tout en direct." />
+    <meta name="theme-color" content="#f26522" />
+    <meta name="color-scheme" content="light" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="robots" content="noindex" />
 
     <link rel="preconnect" href="https://eqbvfhhxrovsscldcgfh.supabase.co" crossorigin />
+    <link rel="preload" href="/assets/fonts/anton-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="/assets/css/app.css" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍔</text></svg>" />
     <link rel="modulepreload" href="/assets/js/api.js" />
@@ -21,7 +22,7 @@
     <header class="topbar">
       <div class="topbar__inner">
         <button class="iconbtn hidden" id="back" type="button" aria-label="Étape précédente">←</button>
-        <span class="topbar__title" id="party-name">Burger Party</span>
+        <span class="topbar__title"><span id="party-name">Burger Party</span><sup>®</sup></span>
         <span class="topbar__title" id="step-counter" style="flex: none"></span>
       </div>
       <div class="progress" aria-hidden="true"><div class="progress__bar" id="progress"></div></div>
@@ -32,8 +33,8 @@
       <section class="step" id="step-welcome">
         <div class="stack-lg">
           <div class="stack">
-            <p class="eyebrow">Service du soir</p>
-            <h1>Ce soir,<br />c'est burgers 🍔</h1>
+            <p><span class="eyebrow">Service du soir</span></p>
+            <h1>Ce soir<br />c'est <span class="pop">burgers</span></h1>
             <p class="lede" id="welcome-message">
               Compose ta commande comme au fast-food. La cuisine reçoit tout en direct.
             </p>
@@ -59,8 +60,8 @@
       <section class="step hidden" id="step-burger">
         <div class="stack-lg">
           <div class="stack">
-            <p class="eyebrow">Étape 1</p>
-            <h2>Choisis ton burger</h2>
+            <p><span class="eyebrow">Étape 1</span></p>
+            <h2>Choisis ton <span class="pop">burger</span></h2>
           </div>
           <div class="cards" id="burger-list" role="group" aria-label="Burgers disponibles">
             <div class="skeleton"></div>
@@ -74,14 +75,23 @@
       <section class="step hidden" id="step-custom">
         <div class="stack-lg">
           <div class="stack">
-            <p class="eyebrow">Étape 2</p>
+            <p><span class="eyebrow">Étape 2</span></p>
             <h2 id="custom-title">Personnalise-le</h2>
-            <p class="lede">Touche un ingrédient pour le retirer.</p>
           </div>
 
-          <div class="stack">
-            <p class="section-label">Ingrédients</p>
+          <div class="stack" id="ingredient-block">
+            <p class="section-label">Retirer un ingrédient</p>
             <div class="chips" id="ingredient-list" role="group" aria-label="Ingrédients à retirer"></div>
+          </div>
+
+          <div class="stack hidden" id="extra-block">
+            <p class="section-label">Suppléments</p>
+            <div class="chips" id="extra-list" role="group" aria-label="Suppléments"></div>
+          </div>
+
+          <div class="stack hidden" id="sauce-block">
+            <p class="section-label">Sauces</p>
+            <div class="chips" id="sauce-list" role="group" aria-label="Sauces"></div>
           </div>
 
           <div class="stack hidden" id="cooking-block">
@@ -95,17 +105,16 @@
       <section class="step hidden" id="step-extras">
         <div class="stack-lg">
           <div class="stack">
-            <p class="eyebrow">Étape 3</p>
+            <p><span class="eyebrow">Étape 3</span></p>
             <h2>Avec ça ?</h2>
-            <p class="lede">Autant que tu veux, ou rien du tout.</p>
           </div>
 
-          <div class="stack">
+          <div class="stack hidden" id="side-block">
             <p class="section-label">Accompagnements</p>
             <div class="chips" id="side-list" role="group" aria-label="Accompagnements"></div>
           </div>
 
-          <div class="stack">
+          <div class="stack hidden" id="drink-block">
             <p class="section-label">Boissons</p>
             <div class="chips" id="drink-list" role="group" aria-label="Boissons"></div>
           </div>
@@ -116,14 +125,14 @@
       <section class="step hidden" id="step-recap">
         <div class="stack-lg">
           <div class="stack">
-            <p class="eyebrow">Dernière étape</p>
-            <h2>On récapitule</h2>
+            <p><span class="eyebrow">Dernière étape</span></p>
+            <h2>On <span class="pop">récapitule</span></h2>
           </div>
 
           <div class="panel" id="recap"></div>
 
           <div class="field">
-            <label class="section-label" for="note">Un mot pour la cuisine ? (facultatif)</label>
+            <label class="section-label" for="note">Un mot pour la cuisine ?</label>
             <textarea
               class="textarea"
               id="note"
@@ -158,7 +167,7 @@
       <section class="step hidden" id="step-closed">
         <div class="stack-lg" style="text-align: center; padding-top: var(--sp-6)">
           <p style="font-size: 3.5rem">🔒</p>
-          <h2>Les commandes sont closes</h2>
+          <h2>Les commandes sont <span class="pop">closes</span></h2>
           <p class="lede" id="closed-message">Le service a démarré. Va voir en cuisine !</p>
         </div>
       </section>

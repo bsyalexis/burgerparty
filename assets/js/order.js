@@ -3,7 +3,7 @@
  * Aucune dépendance : tout tient dans ce fichier + api.js.
  */
 
-import { COOKING, STATUS } from "./config.js";
+import { COOKING, STATUS, ADDON_GROUPS } from "./config.js";
 import {
   loadMenu,
   createOrder,
@@ -12,10 +12,12 @@ import {
   deleteOrder,
 } from "./api.js";
 
-const STEPS = ["welcome", "burger", "custom", "extras", "recap"];
 const LS_ORDER = "bp:orderId";
 const LS_NAME = "bp:name";
 const POLL_MS = 8000;
+
+/** L'étape « avec ça ? » saute d'elle-même s'il n'y a rien à proposer. */
+let STEPS = ["welcome", "burger", "custom", "extras", "recap"];
 
 const state = {
   step: "welcome",
@@ -24,8 +26,7 @@ const state = {
   burger: null,
   removed: new Set(),
   cooking: null,
-  sides: new Set(),
-  note: "",
+  addons: new Set(),
   order: null, // commande déjà enregistrée → on est en édition
 };
 
@@ -39,10 +40,17 @@ const el = {
   guestName: $("guest-name"),
   burgerList: $("burger-list"),
   customTitle: $("custom-title"),
+  ingredientBlock: $("ingredient-block"),
   ingredientList: $("ingredient-list"),
+  extraBlock: $("extra-block"),
+  extraList: $("extra-list"),
+  sauceBlock: $("sauce-block"),
+  sauceList: $("sauce-list"),
   cookingBlock: $("cooking-block"),
   cookingList: $("cooking-list"),
+  sideBlock: $("side-block"),
   sideList: $("side-list"),
+  drinkBlock: $("drink-block"),
   drinkList: $("drink-list"),
   recap: $("recap"),
   note: $("note"),
@@ -86,14 +94,16 @@ function buzz(ms = 8) {
   if (navigator.vibrate) navigator.vibrate(ms);
 }
 
-const sideBySlug = (slug) => state.menu.sides.find((s) => s.slug === slug);
+const addonBySlug = (slug) => state.menu.addons.find((a) => a.slug === slug);
+const addonsIn = (category) =>
+  state.menu.addons.filter((a) => a.category === category);
 const burgerBySlug = (slug) => state.menu.burgers.find((b) => b.slug === slug);
 
 /* ------------------------------------------------------------- Navigation */
 
 function show(step) {
   state.step = step;
-  for (const name of [...STEPS, "ticket", "closed"]) {
+  for (const name of ["welcome", "burger", "custom", "extras", "recap", "ticket", "closed"]) {
     $(`step-${name}`).classList.toggle("hidden", name !== step);
   }
 
@@ -103,7 +113,8 @@ function show(step) {
   el.progress.style.width = isFlow
     ? `${((index + 1) / STEPS.length) * 100}%`
     : "100%";
-  el.counter.textContent = isFlow && index > 0 ? `${index}/${STEPS.length - 1}` : "";
+  el.counter.textContent =
+    isFlow && index > 0 ? `${index}/${STEPS.length - 1}` : "";
   el.back.classList.toggle("hidden", !isFlow || index === 0);
   el.dock.classList.toggle("hidden", step === "closed");
 
@@ -114,6 +125,15 @@ function show(step) {
 function goBack() {
   const index = STEPS.indexOf(state.step);
   if (index > 0) show(STEPS[index - 1]);
+}
+
+/** Prépare et affiche l'étape qui suit celle en cours. */
+function goNext() {
+  const next = STEPS[STEPS.indexOf(state.step) + 1];
+  if (next === "custom") renderCustom();
+  if (next === "extras") renderSidesAndDrinks();
+  if (next === "recap") renderRecap();
+  show(next);
 }
 
 /* ------------------------------------------------------------ Barre d'action */
@@ -149,9 +169,7 @@ function renderDock() {
       break;
 
     case "recap":
-      el.cta.textContent = state.order
-        ? "Mettre à jour ma commande"
-        : "Valider ma commande";
+      el.cta.textContent = state.order ? "Mettre à jour" : "Valider ma commande";
       break;
 
     case "ticket":
@@ -192,10 +210,27 @@ function renderBurgers() {
     .join("");
 }
 
+/** Une pastille d'option : supplément, sauce, accompagnement ou boisson. */
+function addonChip(addon, withPlus = false) {
+  return `
+    <button class="chip chip--pick" type="button" data-addon="${esc(addon.slug)}"
+            aria-pressed="${state.addons.has(addon.slug)}">
+      ${withPlus ? '<span class="chip__plus" aria-hidden="true">+</span>' : ""}
+      <span aria-hidden="true">${esc(addon.emoji)}</span> ${esc(addon.name)}
+    </button>`;
+}
+
+/** Remplit un bloc et le masque s'il n'y a rien à montrer. */
+function fillBlock(block, list, addons, withPlus = false) {
+  block.classList.toggle("hidden", addons.length === 0);
+  list.innerHTML = addons.map((a) => addonChip(a, withPlus)).join("");
+}
+
 function renderCustom() {
   const burger = state.burger;
   el.customTitle.textContent = burger.name;
 
+  el.ingredientBlock.classList.toggle("hidden", !burger.ingredients.length);
   el.ingredientList.innerHTML = burger.ingredients
     .map(
       (ing) => `
@@ -205,6 +240,9 @@ function renderCustom() {
       </button>`,
     )
     .join("");
+
+  fillBlock(el.extraBlock, el.extraList, addonsIn("extra"), true);
+  fillBlock(el.sauceBlock, el.sauceList, addonsIn("sauce"));
 
   el.cookingBlock.classList.toggle("hidden", !burger.needs_cooking);
   if (burger.needs_cooking) {
@@ -220,52 +258,38 @@ function renderCustom() {
   }
 }
 
-function renderExtras() {
-  const chip = (s) => `
-    <button class="chip chip--pick" type="button" data-side="${esc(s.slug)}"
-            aria-pressed="${state.sides.has(s.slug)}">
-      <span aria-hidden="true">${esc(s.emoji)}</span> ${esc(s.name)}
-    </button>`;
-
-  el.sideList.innerHTML = state.menu.sides
-    .filter((s) => s.category === "side")
-    .map(chip)
-    .join("");
-  el.drinkList.innerHTML = state.menu.sides
-    .filter((s) => s.category === "drink")
-    .map(chip)
-    .join("");
+function renderSidesAndDrinks() {
+  fillBlock(el.sideBlock, el.sideList, addonsIn("side"));
+  fillBlock(el.drinkBlock, el.drinkList, addonsIn("drink"));
 }
 
 /** Lignes partagées entre le récap et le ticket. */
 function summaryRows(source) {
-  const burger = source.burger;
-  const removed = source.removed;
-  const sides = source.sides.filter(Boolean);
-
   const row = (label, value) =>
     `<div class="row"><span class="row__label">${label}</span><span class="row__value">${value}</span></div>`;
 
   const rows = [
     row("Pour", esc(source.name)),
-    row("Burger", `${esc(burger.emoji)} ${esc(burger.name)}`),
+    row("Burger", `${esc(source.burger.emoji)} ${esc(source.burger.name)}`),
   ];
 
   if (source.cooking) rows.push(row("Cuisson", esc(COOKING[source.cooking])));
 
-  if (removed.length) {
+  if (source.removed.length) {
     rows.push(
       row(
         "Sans",
-        `<span style="color: var(--c-danger)">${removed.map(esc).join(", ")}</span>`,
+        `<span style="color: var(--c-danger)">${source.removed.map(esc).join(", ")}</span>`,
       ),
     );
   }
 
-  const food = sides.filter((s) => s.category === "side");
-  const drinks = sides.filter((s) => s.category === "drink");
-  if (food.length) rows.push(row("Accompagnements", food.map((s) => esc(s.name)).join(", ")));
-  if (drinks.length) rows.push(row("Boissons", drinks.map((s) => esc(s.name)).join(", ")));
+  const picked = source.addons.filter(Boolean);
+  for (const [category, label] of Object.entries(ADDON_GROUPS)) {
+    const group = picked.filter((a) => a.category === category);
+    if (group.length) rows.push(row(label, group.map((a) => esc(a.name)).join(", ")));
+  }
+
   if (source.note) rows.push(row("Note", `<em>${esc(source.note)}</em>`));
 
   return rows.join("");
@@ -277,7 +301,7 @@ function renderRecap() {
     burger: state.burger,
     cooking: state.cooking,
     removed: [...state.removed],
-    sides: [...state.sides].map(sideBySlug),
+    addons: [...state.addons].map(addonBySlug),
     note: el.note.value.trim(),
   });
 }
@@ -297,7 +321,7 @@ function renderTicket() {
     },
     cooking: order.cooking,
     removed: order.removed,
-    sides: order.side_slugs.map(sideBySlug),
+    addons: order.addon_slugs.map(addonBySlug),
     note: order.note,
   });
 }
@@ -310,7 +334,7 @@ function hydrateFrom(order) {
   state.burger = burgerBySlug(order.burger_slug) ?? null;
   state.removed = new Set(order.removed);
   state.cooking = order.cooking;
-  state.sides = new Set(order.side_slugs);
+  state.addons = new Set(order.addon_slugs);
   el.note.value = order.note ?? "";
   el.guestName.value = order.guest_name;
 }
@@ -323,7 +347,7 @@ async function submit() {
     burger_slug: state.burger.slug,
     cooking: state.burger.needs_cooking ? state.cooking : null,
     removed: [...state.removed],
-    side_slugs: [...state.sides],
+    addon_slugs: [...state.addons],
     note: el.note.value.trim() || null,
   };
 
@@ -364,7 +388,7 @@ async function cancel() {
   state.burger = null;
   state.removed = new Set();
   state.cooking = null;
-  state.sides = new Set();
+  state.addons = new Set();
   el.note.value = "";
   renderBurgers();
   show("welcome");
@@ -436,49 +460,30 @@ el.cookingList.addEventListener("click", (e) => {
   buzz();
 });
 
-for (const list of [el.sideList, el.drinkList]) {
+for (const list of [el.extraList, el.sauceList, el.sideList, el.drinkList]) {
   list.addEventListener("click", (e) => {
-    const chip = e.target.closest("[data-side]");
+    const chip = e.target.closest("[data-addon]");
     if (!chip) return;
-    const slug = chip.dataset.side;
-    state.sides.has(slug) ? state.sides.delete(slug) : state.sides.add(slug);
-    chip.setAttribute("aria-pressed", state.sides.has(slug));
+    const slug = chip.dataset.addon;
+    state.addons.has(slug) ? state.addons.delete(slug) : state.addons.add(slug);
+    chip.setAttribute("aria-pressed", state.addons.has(slug));
     buzz();
   });
 }
 
 el.cta.addEventListener("click", () => {
-  switch (state.step) {
-    case "welcome":
-      state.name = el.guestName.value.trim();
-      if (!state.name) return;
-      localStorage.setItem(LS_NAME, state.name);
-      show("burger");
-      break;
-
-    case "burger":
-      renderCustom();
-      show("custom");
-      break;
-
-    case "custom":
-      renderExtras();
-      show("extras");
-      break;
-
-    case "extras":
-      renderRecap();
-      show("recap");
-      break;
-
-    case "recap":
-      submit();
-      break;
-
-    case "ticket":
-      renderBurgers();
-      show("burger");
-      break;
+  if (state.step === "welcome") {
+    state.name = el.guestName.value.trim();
+    if (!state.name) return;
+    localStorage.setItem(LS_NAME, state.name);
+    goNext();
+  } else if (state.step === "recap") {
+    submit();
+  } else if (state.step === "ticket") {
+    renderBurgers();
+    show("burger");
+  } else {
+    goNext();
   }
 });
 
@@ -497,6 +502,12 @@ async function init() {
     toast("Menu indisponible. Recharge la page.", true);
     return;
   }
+
+  // Rien à proposer en accompagnement ni en boisson ? On retire l'étape.
+  const hasWithThat = state.menu.addons.some(
+    (a) => a.category === "side" || a.category === "drink",
+  );
+  if (!hasWithThat) STEPS = STEPS.filter((s) => s !== "extras");
 
   const { settings } = state.menu;
   if (settings.party_name) {

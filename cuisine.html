@@ -4,11 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Cuisine — Burger Party</title>
-    <meta name="theme-color" content="#0e0d0c" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#f26522" />
+    <meta name="color-scheme" content="light" />
     <meta name="robots" content="noindex" />
 
     <link rel="preconnect" href="https://eqbvfhhxrovsscldcgfh.supabase.co" crossorigin />
+    <link rel="preload" href="/assets/fonts/anton-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="/assets/css/app.css" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍🍳</text></svg>" />
   </head>
@@ -17,7 +18,7 @@
     <!-- Garde-fou : évite les ouvertures accidentelles, ce n'est pas un secret -->
     <section class="gate" id="gate">
       <p style="font-size: 3rem">👨‍🍳</p>
-      <h2>Écran cuisine</h2>
+      <h2>Écran <span class="pop">cuisine</span></h2>
       <div class="field">
         <label class="sr-only" for="code">Code d'accès</label>
         <input
@@ -36,8 +37,8 @@
 
     <div class="hidden" id="console">
       <header class="topbar">
-        <div class="topbar__inner" style="max-width: 60rem">
-          <span class="topbar__title" style="flex: 1">Cuisine</span>
+        <div class="topbar__inner" style="max-width: 62rem">
+          <span class="topbar__title" style="flex: 1">Cuisine<sup>®</sup></span>
           <span class="live" id="live" data-live="off">hors ligne</span>
         </div>
       </header>
@@ -98,14 +99,7 @@
                 <p class="section-label">Sans (à retirer)</p>
                 <div class="tally" id="tally-removed"></div>
               </div>
-              <div class="stack">
-                <p class="section-label">Accompagnements</p>
-                <div class="tally" id="tally-sides"></div>
-              </div>
-              <div class="stack">
-                <p class="section-label">Boissons</p>
-                <div class="tally" id="tally-drinks"></div>
-              </div>
+              <div class="stack-lg" id="tally-addons"></div>
             </div>
           </section>
         </div>

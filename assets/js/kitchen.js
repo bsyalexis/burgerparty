@@ -12,6 +12,7 @@ import {
   KITCHEN_CODE,
   COOKING,
   STATUS,
+  ADDON_GROUPS,
 } from "./config.js";
 import { loadMenu, listOrders, updateOrder, deleteOrder, setSettings } from "./api.js";
 
@@ -46,8 +47,7 @@ const el = {
   tallyBurgers: $("tally-burgers"),
   tallyCooking: $("tally-cooking"),
   tallyRemoved: $("tally-removed"),
-  tallySides: $("tally-sides"),
-  tallyDrinks: $("tally-drinks"),
+  tallyAddons: $("tally-addons"),
   toast: $("toast"),
 };
 
@@ -105,8 +105,8 @@ const nameOf = (list, slug) => list.find((x) => x.slug === slug)?.name ?? slug;
 function orderCard(order) {
   const burger = state.menu.burgers.find((b) => b.slug === order.burger_slug);
   const next = NEXT_STATUS[order.status];
-  const sides = order.side_slugs
-    .map((s) => state.menu.sides.find((x) => x.slug === s))
+  const addons = order.addon_slugs
+    .map((s) => state.menu.addons.find((x) => x.slug === s))
     .filter(Boolean);
 
   const tags = [
@@ -114,8 +114,12 @@ function orderCard(order) {
       ? `<span class="tag tag--cook">${esc(COOKING[order.cooking])}</span>`
       : "",
     ...order.removed.map((r) => `<span class="tag tag--out">${esc(r)}</span>`),
-    ...sides.map(
-      (s) => `<span class="tag">${esc(s.emoji)} ${esc(s.name)}</span>`,
+    // Les suppléments sautent aux yeux en vert : c'est ce qu'on ajoute
+    ...addons.map(
+      (a) =>
+        `<span class="tag${a.category === "extra" ? " tag--add" : ""}">${
+          a.category === "extra" ? "+ " : ""
+        }${esc(a.emoji)} ${esc(a.name)}</span>`,
     ),
   ].join("");
 
@@ -184,8 +188,7 @@ function renderTally() {
   const burgers = {};
   const cooking = {};
   const removed = {};
-  const sides = {};
-  const drinks = {};
+  const byCategory = {}; // { extra: { Cheddar: 3 }, sauce: {…}, … }
 
   for (const order of todo) {
     const name = nameOf(state.menu.burgers, order.burger_slug);
@@ -198,19 +201,29 @@ function renderTally() {
 
     for (const ing of order.removed) removed[ing] = (removed[ing] ?? 0) + 1;
 
-    for (const slug of order.side_slugs) {
-      const side = state.menu.sides.find((s) => s.slug === slug);
-      if (!side) continue;
-      const bucket = side.category === "drink" ? drinks : sides;
-      bucket[side.name] = (bucket[side.name] ?? 0) + 1;
+    for (const slug of order.addon_slugs) {
+      const addon = state.menu.addons.find((a) => a.slug === slug);
+      if (!addon) continue;
+      const bucket = (byCategory[addon.category] ??= {});
+      bucket[addon.name] = (bucket[addon.name] ?? 0) + 1;
     }
   }
 
   el.tallyBurgers.innerHTML = tallyRows(burgers);
   el.tallyCooking.innerHTML = tallyRows(cooking);
   el.tallyRemoved.innerHTML = tallyRows(removed);
-  el.tallySides.innerHTML = tallyRows(sides);
-  el.tallyDrinks.innerHTML = tallyRows(drinks);
+
+  // Un bloc par famille d'options, uniquement si quelqu'un en a pris
+  el.tallyAddons.innerHTML = Object.entries(ADDON_GROUPS)
+    .filter(([category]) => Object.keys(byCategory[category] ?? {}).length)
+    .map(
+      ([category, label]) => `
+      <div class="stack">
+        <p class="section-label">${esc(label)}</p>
+        <div class="tally">${tallyRows(byCategory[category])}</div>
+      </div>`,
+    )
+    .join("");
 }
 
 function renderStats() {

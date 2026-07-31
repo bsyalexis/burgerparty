@@ -36,12 +36,12 @@ async function request(path, { method = "GET", body, prefer } = {}) {
 
 /** Menu + réglages en une seule salve de requêtes parallèles. */
 export async function loadMenu() {
-  const [burgers, sides, settings] = await Promise.all([
+  const [burgers, addons, settings] = await Promise.all([
     request("/burgers?select=*&available=eq.true&order=sort_order.asc"),
-    request("/sides?select=*&available=eq.true&order=sort_order.asc"),
+    request("/addons?select=*&available=eq.true&order=sort_order.asc"),
     request("/settings?select=*&id=eq.1"),
   ]);
-  return { burgers, sides, settings: settings[0] ?? {} };
+  return { burgers, addons, settings: settings[0] ?? {} };
 }
 
 export async function createOrder(order) {

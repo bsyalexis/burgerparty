@@ -19,6 +19,14 @@ export const COOKING = {
   bien_cuit: "Bien cuit",
 };
 
+/** Les quatre familles d'options, dans l'ordre où on les présente. */
+export const ADDON_GROUPS = {
+  extra: "Suppléments",
+  sauce: "Sauces",
+  side: "Accompagnements",
+  drink: "Boissons",
+};
+
 /** Libellés des statuts de commande. */
 export const STATUS = {
   nouvelle: "Nouvelle",
