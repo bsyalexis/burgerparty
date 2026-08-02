@@ -87,6 +87,11 @@ ni `side` ni `drink` n'existent, l'étape « Avec ça ? » saute entièrement. P
 rouvrir cette étape, il suffit d'ajouter une ligne `side` (par exemple des
 frites) : rien à redéployer.
 
+`excludes_cooking` retire des cuissons de la liste quand l'option est cochée :
+« En smash » y met `saignant`, une galette fine ne pouvant pas être servie
+saignante. Si la cuisson déjà choisie devient impossible elle est décochée, et
+s'il n'en reste qu'une elle est cochée d'office.
+
 Deux colonnes servent la liste de courses. `counts_as` dit sous quel nom un
 supplément se compte — « Double steak » gonfle la ligne « Steak » au lieu d'en
 créer une à part. `counts_qty` dit combien d'unités il ajoute : `0` pour « En

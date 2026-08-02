@@ -297,18 +297,40 @@ function renderCustom() {
   fillBlock(el.extraBlock, el.extraList, addonsIn("extra", burger), true);
   fillBlock(el.sauceBlock, el.sauceList, addonsIn("sauce", burger));
 
+  renderCooking();
+}
+
+/**
+ * Les cuissons dépendent des options cochées : une galette smash est trop
+ * fine pour être saignante. La règle vit en base (`excludes_cooking`), pas
+ * ici — d'autres options pourront s'en servir sans toucher au code.
+ */
+function renderCooking() {
+  const burger = state.burger;
   el.cookingBlock.classList.toggle("hidden", !burger.needs_cooking);
-  if (burger.needs_cooking) {
-    el.cookingList.innerHTML = Object.entries(COOKING)
-      .map(
-        ([key, label]) => `
-        <button class="chip" type="button" data-cooking="${key}"
-                aria-pressed="${state.cooking === key}">
-          ${esc(label)}
-        </button>`,
-      )
-      .join("");
+  if (!burger.needs_cooking) return;
+
+  const banned = new Set();
+  for (const slug of state.addons) {
+    for (const c of addonBySlug(slug)?.excludes_cooking ?? []) banned.add(c);
   }
+
+  const options = Object.entries(COOKING).filter(([key]) => !banned.has(key));
+
+  // Une cuisson devenue impossible ne peut pas rester sélectionnée. S'il n'en
+  // reste qu'une, autant la cocher : le convive n'a de toute façon pas le choix.
+  if (state.cooking && banned.has(state.cooking)) state.cooking = null;
+  if (!state.cooking && options.length === 1) state.cooking = options[0][0];
+
+  el.cookingList.innerHTML = options
+    .map(
+      ([key, label]) => `
+      <button class="chip" type="button" data-cooking="${key}"
+              aria-pressed="${state.cooking === key}">
+        ${esc(label)}
+      </button>`,
+    )
+    .join("");
 }
 
 function renderSidesAndDrinks() {
@@ -550,6 +572,12 @@ for (const list of [el.extraList, el.sauceList, el.sideList, el.drinkList]) {
     chip.setAttribute("aria-pressed", state.addons.has(slug));
     tap(chip);
     buzz();
+
+    // Cocher « En smash » retire le saignant de la liste des cuissons
+    if (state.step === "custom") {
+      renderCooking();
+      renderDock();
+    }
   });
 }
 
