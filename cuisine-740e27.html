@@ -108,6 +108,8 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+    <!-- GSAP en UMD, chargé avant le module : `defer` garantit l'ordre -->
+    <script src="/assets/js/vendor/gsap.min.js" defer></script>
     <script type="module" src="/assets/js/kitchen.js"></script>
   </body>
 </html>

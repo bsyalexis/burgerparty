@@ -15,6 +15,7 @@ import {
   ADDON_GROUPS,
 } from "./config.js";
 import { loadMenu, listOrders, updateOrder, deleteOrder, setSettings } from "./api.js";
+import { initPress } from "./motion.js";
 
 const NEXT_STATUS = {
   nouvelle: { to: "en_cuisine", label: "Lancer" },
@@ -386,6 +387,9 @@ function unlock() {
   sessionStorage.setItem(LS_GATE, "1");
   start();
 }
+
+// Délégué sur le document : couvre aussi le bouton de l'écran de code
+initPress();
 
 el.gateBtn.addEventListener("click", unlock);
 el.code.addEventListener("keydown", (e) => {

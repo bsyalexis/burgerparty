@@ -35,28 +35,22 @@
           <div class="stack">
             <p><span class="eyebrow">Service du soir</span></p>
             <h1>
-              <span class="sr-only">Ce soir c'est burgers</span>
-              <span aria-hidden="true">
-                <span id="type-1"></span><br /><span id="type-2"></span>
-                <span class="pop pop--hot hidden" id="hero-word"
-                  ><span id="hero-text">burgers</span
-                  ><span class="reel hidden" id="reel"
-                    ><span class="reel__track" id="reel-track"></span></span
-                  ><span class="flames" id="flames"
-                    ><i style="--x: 21%; --y: 27%; --s: 0.95; --r: -16deg; --d: 0s; --t: 2.1s"></i
-                    ><i style="--x: 47%; --y: 15%; --s: 1.15; --r: 10deg; --d: 0.12s; --t: 1.7s"></i
-                    ><i style="--x: 71%; --y: 25%; --s: 0.9; --r: -8deg; --d: 0.24s; --t: 2.4s"></i
-                    ><i style="--x: 93%; --y: 56%; --s: 1.05; --r: 20deg; --d: 0.36s; --t: 1.9s"></i
-                  ></span>
-                </span>
+              Ce soir<br />c'est
+              <span class="pop pop--hot"
+                >burgers<span class="flames" id="flames" aria-hidden="true"
+                  ><i style="--x: 21%; --y: 27%; --s: 0.95; --r: -16deg; --d: 0s; --t: 2.1s"></i
+                  ><i style="--x: 47%; --y: 15%; --s: 1.15; --r: 10deg; --d: 0.12s; --t: 1.7s"></i
+                  ><i style="--x: 71%; --y: 25%; --s: 0.9; --r: -8deg; --d: 0.24s; --t: 2.4s"></i
+                  ><i style="--x: 93%; --y: 56%; --s: 1.05; --r: 20deg; --d: 0.36s; --t: 1.9s"></i
+                ></span>
               </span>
             </h1>
-            <p class="lede reveal" id="welcome-message">
+            <p class="lede" id="welcome-message">
               Compose ta commande comme au fast-food. La cuisine reçoit tout en direct.
             </p>
           </div>
 
-          <div class="field reveal">
+          <div class="field">
             <label class="section-label" for="guest-name">Ton prénom</label>
             <input
               class="input"
@@ -92,7 +86,10 @@
         <div class="stack-lg">
           <div class="stack">
             <p><span class="eyebrow">Étape 2</span></p>
-            <h2 id="custom-title">Personnalise-le</h2>
+            <div class="sheet">
+              <span class="sheet__visual" id="custom-visual" aria-hidden="true"></span>
+              <h2 id="custom-title">Personnalise-le</h2>
+            </div>
           </div>
 
           <div class="stack" id="ingredient-block">
@@ -162,7 +159,7 @@
       <!-- 6 — Ticket --------------------------------------------------- -->
       <section class="step hidden" id="step-ticket">
         <div class="stack-lg">
-          <div class="ticket">
+          <div class="ticket" id="ticket-frame">
             <p class="ticket__label">Commande</p>
             <p class="ticket__num" id="ticket-num">—</p>
             <p class="ticket__label" id="ticket-name"></p>
@@ -199,6 +196,8 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+    <!-- GSAP en UMD, chargé avant le module : `defer` garantit l'ordre -->
+    <script src="/assets/js/vendor/gsap.min.js" defer></script>
     <script type="module" src="/assets/js/order.js"></script>
   </body>
 </html>

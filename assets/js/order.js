@@ -4,7 +4,16 @@
  */
 
 import { COOKING, STATUS, ADDON_GROUPS } from "./config.js";
-import { playIntro, settleIntro } from "./intro.js";
+import {
+  initPress,
+  tap,
+  enterStep,
+  captureRect,
+  openProduct,
+  ticketIn,
+  litFlames,
+  burst,
+} from "./motion.js";
 import {
   loadMenu,
   createOrder,
@@ -41,6 +50,7 @@ const el = {
   guestName: $("guest-name"),
   burgerList: $("burger-list"),
   customTitle: $("custom-title"),
+  customVisual: $("custom-visual"),
   ingredientBlock: $("ingredient-block"),
   ingredientList: $("ingredient-list"),
   extraBlock: $("extra-block"),
@@ -95,43 +105,6 @@ function buzz(ms = 8) {
   if (navigator.vibrate) navigator.vibrate(ms);
 }
 
-const stillPreferred = () =>
-  matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-/** Petit rebond sur l'élément qu'on vient de toucher. */
-function pop(node) {
-  node.classList.remove("tap-pop");
-  void node.offsetWidth; // force le redémarrage, même sur un double tap
-  node.classList.add("tap-pop");
-  node.addEventListener("animationend", () => node.classList.remove("tap-pop"), {
-    once: true,
-  });
-}
-
-const BURST = ["🍔", "🔥", "🧀", "🍟", "🥓", "🧅"];
-
-/** Gerbe d'autocollants à la validation — purement décoratif. */
-function burst() {
-  if (stillPreferred()) return;
-
-  const layer = document.createElement("div");
-  layer.className = "burst";
-  layer.setAttribute("aria-hidden", "true");
-
-  for (let i = 0; i < 12; i++) {
-    const sticker = document.createElement("span");
-    sticker.textContent = BURST[i % BURST.length];
-    sticker.style.left = `${6 + Math.random() * 88}vw`;
-    sticker.style.setProperty("--dx", `${(Math.random() - 0.5) * 44}vw`);
-    sticker.style.setProperty("--rot", `${(Math.random() - 0.5) * 720}deg`);
-    sticker.style.animationDelay = `${Math.random() * 0.2}s`;
-    layer.append(sticker);
-  }
-
-  document.body.append(layer);
-  setTimeout(() => layer.remove(), 1600);
-}
-
 const addonBySlug = (slug) => state.menu.addons.find((a) => a.slug === slug);
 const addonsIn = (category) =>
   state.menu.addons.filter((a) => a.category === category);
@@ -147,8 +120,10 @@ function show(step) {
   for (const name of ["welcome", "burger", "custom", "extras", "recap", "ticket", "closed"]) {
     $(`step-${name}`).classList.toggle("hidden", name !== step);
   }
-  // Sens de l'animation : on ne « recule » que dans le parcours lui-même
-  $(`step-${step}`).dataset.dir = to >= 0 && from > to ? "back" : "forward";
+
+  // On ne « recule » que dans le parcours lui-même
+  const dir = to >= 0 && from > to ? "back" : "forward";
+  enterStep($(`step-${step}`), dir);
 
   const index = to;
   const isFlow = index >= 0;
@@ -173,10 +148,25 @@ function goBack() {
 /** Prépare et affiche l'étape qui suit celle en cours. */
 function goNext() {
   const next = STEPS[STEPS.indexOf(state.step) + 1];
+
+  // La vignette du burger choisi va s'envoler de sa carte vers la fiche
+  // produit. Il faut relever sa position tant que la carte est à l'écran.
+  const from =
+    next === "custom"
+      ? captureRect(
+          el.burgerList.querySelector(
+            `[data-slug="${state.burger.slug}"] .card__visual`,
+          ),
+        )
+      : null;
+
   if (next === "custom") renderCustom();
   if (next === "extras") renderSidesAndDrinks();
   if (next === "recap") renderRecap();
+
   show(next);
+
+  if (from) openProduct(from, el.customVisual);
 }
 
 /* ------------------------------------------------------------ Barre d'action */
@@ -235,19 +225,21 @@ function renderDock() {
 
 /* --------------------------------------------------------------- Rendu menu */
 
+/** Photo du burger, ou son emoji en secours. Partagé carte / fiche produit. */
+function visualOf(burger) {
+  return burger.image_url
+    ? `<img class="card__photo" src="${esc(burger.image_url)}" alt=""
+            loading="lazy" decoding="async" data-emoji="${esc(burger.emoji)}" />`
+    : esc(burger.emoji);
+}
+
 function renderBurgers() {
   el.burgerList.innerHTML = state.menu.burgers
     .map(
-      (b, i) => `
+      (b) => `
       <button class="card" type="button" role="radio" data-slug="${esc(b.slug)}"
-              style="--i: ${i}"
               aria-pressed="${state.burger?.slug === b.slug}">
-        <span class="card__visual" aria-hidden="true">${
-          b.image_url
-            ? `<img class="card__photo" src="${esc(b.image_url)}" alt=""
-                    loading="lazy" decoding="async" data-emoji="${esc(b.emoji)}" />`
-            : esc(b.emoji)
-        }</span>
+        <span class="card__visual" aria-hidden="true">${visualOf(b)}</span>
         <span class="card__body">
           <span class="card__name">${esc(b.name)}</span>
           ${b.tagline ? `<span class="card__tagline">${esc(b.tagline)}</span>` : ""}
@@ -278,6 +270,7 @@ function fillBlock(block, list, addons, withPlus = false) {
 function renderCustom() {
   const burger = state.burger;
   el.customTitle.textContent = burger.name;
+  el.customVisual.innerHTML = visualOf(burger);
 
   el.ingredientBlock.classList.toggle("hidden", !burger.ingredients.length);
   el.ingredientList.innerHTML = burger.ingredients
@@ -373,6 +366,8 @@ function renderTicket() {
     addons: order.addon_slugs.map(addonBySlug),
     note: order.note,
   });
+
+  ticketIn($("ticket-frame"), el.ticketNum, el.ticketStatus);
 }
 
 /* ------------------------------------------------------- Chargement commande */
@@ -502,7 +497,7 @@ el.burgerList.addEventListener("click", (e) => {
   for (const c of el.burgerList.children) {
     c.setAttribute("aria-pressed", c.dataset.slug === next.slug);
   }
-  pop(card);
+  tap(card);
   renderDock();
   buzz();
 });
@@ -513,7 +508,7 @@ el.ingredientList.addEventListener("click", (e) => {
   const ing = chip.dataset.ing;
   state.removed.has(ing) ? state.removed.delete(ing) : state.removed.add(ing);
   chip.setAttribute("aria-pressed", state.removed.has(ing));
-  pop(chip);
+  tap(chip);
   buzz();
 });
 
@@ -524,7 +519,7 @@ el.cookingList.addEventListener("click", (e) => {
   for (const c of el.cookingList.children) {
     c.setAttribute("aria-pressed", c.dataset.cooking === state.cooking);
   }
-  pop(chip);
+  tap(chip);
   renderDock();
   buzz();
 });
@@ -536,7 +531,7 @@ for (const list of [el.extraList, el.sauceList, el.sideList, el.drinkList]) {
     const slug = chip.dataset.addon;
     state.addons.has(slug) ? state.addons.delete(slug) : state.addons.add(slug);
     chip.setAttribute("aria-pressed", state.addons.has(slug));
-    pop(chip);
+    tap(chip);
     buzz();
   });
 }
@@ -564,16 +559,8 @@ el.ctaSecondary.addEventListener("click", () => {
 /* ------------------------------------------------------------ Démarrage */
 
 async function init() {
-  // L'ouverture démarre tout de suite, en parallèle du chargement du menu.
-  // On la saute si ce téléphone a déjà une commande : il ira droit au ticket.
-  if (!localStorage.getItem(LS_ORDER)) {
-    playIntro().catch((error) => {
-      console.error(error);
-      settleIntro(); // un titre vide serait pire que pas d'animation
-    });
-  } else {
-    settleIntro();
-  }
+  initPress();
+  litFlames($("flames"));
 
   try {
     state.menu = await loadMenu();

@@ -218,11 +218,6 @@ button {
   background: var(--c-paper);
   border: var(--stroke) solid var(--c-ink);
   border-radius: var(--r-full);
-  transition: transform 0.12s var(--ease);
-}
-
-.iconbtn:active {
-  transform: scale(0.9);
 }
 
 .progress {
@@ -242,27 +237,6 @@ button {
 .step {
   padding-top: var(--sp-5);
   padding-bottom: var(--sp-6);
-  /* Le sens dépend de la navigation : on avance vers la gauche, on
-     revient vers la droite. Le geste raconte où on est dans le parcours. */
-  animation: step-forward 0.38s var(--ease) backwards;
-}
-
-.step[data-dir="back"] {
-  animation-name: step-back;
-}
-
-@keyframes step-forward {
-  from {
-    opacity: 0;
-    transform: translate3d(22px, 6px, 0);
-  }
-}
-
-@keyframes step-back {
-  from {
-    opacity: 0;
-    transform: translate3d(-22px, 6px, 0);
-  }
 }
 
 /* Pastille autocollante, légèrement de travers */
@@ -310,8 +284,8 @@ h2 {
   display: inline-block;
 }
 
-/* La zone déborde du mot : les flammes vivent autour des lettres, jamais
-   par-dessus. Elles montent au-dessus et sur la droite — le sens du feu. */
+/* La zone déborde du mot pour que les flammes puissent mordre sur le haut
+   des lettres et sur la dernière, sans toucher la ligne du dessus. */
 .flames {
   position: absolute;
   inset: -0.5em -0.55em;
@@ -324,9 +298,6 @@ h2 {
   top: var(--y);
   font-size: 0.42em;
   line-height: 1;
-  /* Allumées par l'ouverture, en décalé */
-  opacity: 0;
-  transition: opacity 0.4s var(--ease) var(--d, 0s);
   /* Contour blanc épais + ombre décalée : le vocabulaire des stickers */
   filter: drop-shadow(1.5px 0 0 var(--c-paper))
     drop-shadow(-1.5px 0 0 var(--c-paper))
@@ -337,80 +308,6 @@ h2 {
 
 .flames i::before {
   content: "🔥";
-}
-
-.flames--lit i {
-  opacity: 1;
-}
-
-/* ------------------------------------------------------- Ouverture -- */
-
-/* Le titre réserve ses deux lignes dès le départ : pendant la frappe de la
-   première, la seconde est vide et ne créerait pas de ligne. */
-#step-welcome h1 {
-  min-height: 1.9em;
-}
-
-/* Curseur de frappe */
-.typing::after {
-  content: "";
-  display: inline-block;
-  width: 0.07em;
-  height: 0.72em;
-  margin-left: 0.06em;
-  background: currentColor;
-  animation: caret 0.75s steps(1) infinite;
-}
-
-@keyframes caret {
-  50% {
-    opacity: 0;
-  }
-}
-
-/* Rouleau de machine à sous.
-   Posé en absolu par-dessus le mot final : dans le flux, il élargissait la
-   ligne à chaque mot et faisait sauter la page en disparaissant. Il déborde
-   sur la droite pour les mots plus longs, ce qui ne gêne personne — il n'y a
-   rien après. */
-.reel {
-  --reel-h: 0.95em;
-  position: absolute;
-  left: 0;
-  top: 0;
-  overflow: hidden;
-  height: var(--reel-h);
-  line-height: var(--reel-h);
-  color: var(--c-orange);
-}
-
-/* Pendant le défilement, le mot final garde sa place sans se montrer */
-.pop--hot.is-rolling #hero-text {
-  visibility: hidden;
-}
-
-.reel__track {
-  display: block;
-  will-change: transform;
-}
-
-.reel__track span {
-  display: block;
-  height: var(--reel-h);
-  line-height: var(--reel-h);
-  white-space: nowrap;
-}
-
-/* Le reste de l'écran d'accueil, révélé une fois le mot tombé */
-.reveal {
-  opacity: 0;
-  transform: translate3d(0, 12px, 0);
-  transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
-}
-
-.reveal--in {
-  opacity: 1;
-  transform: none;
 }
 
 /* Le translate centre la flamme sur son point d'ancrage ; il fait partie des
@@ -504,12 +401,6 @@ h3 {
   border-radius: var(--r-full);
   box-shadow: var(--shadow);
   transition: transform 0.12s var(--ease), box-shadow 0.12s var(--ease);
-}
-
-/* L'autocollant qu'on écrase du pouce */
-.btn:active {
-  transform: translate(3px, 3px);
-  box-shadow: 1px 1px 0 var(--c-ink);
 }
 
 .btn[disabled] {
@@ -636,11 +527,6 @@ h3 {
   }
 }
 
-.card:active {
-  transform: translate(3px, 3px);
-  box-shadow: 1px 1px 0 var(--c-ink);
-}
-
 .card[aria-pressed="true"] {
   background: var(--c-orange);
   color: var(--c-paper);
@@ -741,6 +627,28 @@ h3 {
   pointer-events: none;
 }
 
+/* En-tête de fiche produit : la vignette y atterrit depuis la carte */
+.sheet {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: var(--sp-3);
+  align-items: center;
+}
+
+.sheet__visual {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  padding: 2px;
+  overflow: hidden;
+  font-size: 1.75rem;
+  background: var(--c-paper);
+  border: var(--stroke) solid var(--c-ink);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+}
+
 /* --------------------------------------------------------------- Chips -- */
 
 .chips {
@@ -765,11 +673,6 @@ h3 {
   box-shadow: var(--shadow-sm);
   transition: transform 0.12s var(--ease), box-shadow 0.12s var(--ease),
     background 0.12s var(--ease), color 0.12s var(--ease);
-}
-
-.chip:active {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 var(--c-ink);
 }
 
 /* Ingrédient retiré : barré, en rouge */
@@ -1273,66 +1176,6 @@ h3 {
    page, donc rien qui saccade sur un téléphone.
    ========================================================================== */
 
-/* Rebond au moment du choix — posé par JS, retiré à la fin de l'animation */
-.tap-pop {
-  animation: tap-pop 0.34s var(--ease);
-}
-
-@keyframes tap-pop {
-  35% {
-    transform: scale(1.09);
-  }
-  70% {
-    transform: scale(0.97);
-  }
-}
-
-/* Une carte occupe toute la largeur : même rebond, amplitude réduite,
-   sinon elle passe sous le bord de l'écran. */
-.card.tap-pop {
-  animation-name: tap-pop-wide;
-}
-
-@keyframes tap-pop-wide {
-  35% {
-    transform: scale(1.025);
-  }
-  70% {
-    transform: scale(0.992);
-  }
-}
-
-/* Le ticket s'imprime : le numéro tombe comme un tampon sur le papier */
-.ticket {
-  animation: ticket-in 0.5s var(--ease) backwards;
-}
-
-.ticket__num {
-  animation: stamp 0.5s var(--ease) 0.22s backwards;
-}
-
-.ticket .badge {
-  animation: stamp 0.45s var(--ease) 0.42s backwards;
-}
-
-@keyframes ticket-in {
-  from {
-    opacity: 0;
-    transform: translate3d(0, -26px, 0) scale(0.96);
-  }
-}
-
-@keyframes stamp {
-  from {
-    opacity: 0;
-    transform: scale(2.2) rotate(-10deg);
-  }
-  55% {
-    opacity: 1;
-    transform: scale(0.92) rotate(2deg);
-  }
-}
-
 /* Gerbe d'autocollants à la validation de la commande */
 .burst {
   position: fixed;
@@ -1344,20 +1187,9 @@ h3 {
 
 .burst span {
   position: absolute;
+  left: 50%;
   bottom: 22vh;
   font-size: 2rem;
-  animation: fly 1.15s cubic-bezier(0.2, 0.6, 0.4, 1) forwards;
-}
-
-@keyframes fly {
-  from {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) rotate(0);
-  }
-  to {
-    opacity: 0;
-    transform: translate3d(var(--dx), -62vh, 0) rotate(var(--rot));
-  }
 }
 
 /* Écran de saisie du code cuisine */

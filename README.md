@@ -101,32 +101,35 @@ La typo d'affichage est **Anton** (SIL Open Font License), auto-hébergée dans
 `assets/fonts/anton-latin.woff2` — 12 ko, sous-ensemble latin, préchargée.
 Aucune requête vers un CDN de polices.
 
-### Ouverture
-
-À l'arrivée sur la page, « Ce soir / c'est » se tape à l'écran, puis un
-rouleau de machine à sous défile entre raclette, tacos, BBQ et burgers et
-retombe sur burgers. Les flammes s'allument, le reste de l'écran apparaît.
-
-Le rouleau est posé en **absolu par-dessus le mot final**, qui réserve la
-place : dans le flux, chaque mot changeait la largeur de la ligne et la page
-sautait. Le titre porte un `min-height` de deux lignes pour la même raison.
-Résultat : zéro décalage de mise en page pendant toute l'ouverture.
-
-L'animation ne joue **qu'une fois par session** — personne n'a envie de la
-revoir à chaque ouverture du lien — et un toucher la coupe. Elle est
-entièrement sautée si une commande existe déjà sur le téléphone, puisqu'on
-part alors droit sur le ticket.
-
 ### Animations
 
-Le parcours invité est animé : entrée des étapes dans le sens de la
-navigation, cartes qui arrivent en cascade, rebond au moment du choix,
-vignette qui se décolle sur le burger sélectionné, ticket qui s'imprime avec
-son numéro tamponné, et une gerbe d'autocollants à la validation.
+La motion passe par **GSAP** (3.15, auto-hébergé dans
+`assets/js/vendor/`, 71 ko / 28 ko gzip), pilotée depuis `assets/js/motion.js`.
+
+- **Ouverture de fiche produit** — la vignette du burger choisi s'envole de sa
+  carte jusqu'en tête de l'écran de personnalisation. C'est un FLIP à la main :
+  on relève la position de départ avant de masquer l'étape, puis GSAP revient
+  à la position d'arrivée.
+- **Transitions d'étape** — le bloc glisse dans le sens de la navigation, ses
+  sections montent en cascade, les cartes arrivent une à une.
+- **Micro-interactions** — enfoncement au doigt sur tout ce qui se touche, avec
+  retour élastique ; rebond de confirmation au moment du choix.
+- **Ticket** — le numéro et le statut se tamponnent sur le papier.
+- **Validation** — une gerbe d'autocollants traverse l'écran.
+
+Règle de partage : **GSAP possède les `transform`, le CSS garde les couleurs,
+les ombres et les états.** Les deux ne doivent jamais animer la même propriété
+sur le même élément, sinon le style en ligne posé par GSAP gagne en silence —
+c'est pour ça qu'il n'y a plus un seul `:active` avec `transform` dans la
+feuille de style.
 
 Tout passe par `transform` et `opacity` — rien ne déclenche de recalcul de
-mise en page. Le bloc `@media (prefers-reduced-motion: reduce)` en haut de la
-feuille coupe l'ensemble d'un coup, et la gerbe ne se déclenche même pas.
+mise en page.
+
+Deux filets de sécurité : si GSAP ne se charge pas, chaque fonction de
+`motion.js` devient un no-op ; et si le système demande moins de mouvement,
+tout est coupé de la même façon. Dans les deux cas l'app reste entièrement
+utilisable, simplement sans animation.
 
 ---
 
@@ -140,15 +143,16 @@ assets/fonts/anton-latin.woff2  typo d'affichage, auto-hébergée
 assets/img/                     photos des burgers (voir le README du dossier)
 assets/js/config.js             URL Supabase, clé publique, code cuisine, libellés
 assets/js/api.js                client PostgREST minimal (fetch, zéro dépendance)
-assets/js/intro.js              ouverture : frappe, rouleau, flammes
+assets/js/motion.js             toute la motion (GSAP)
+assets/js/vendor/gsap.min.js    GSAP, auto-hébergé
 assets/js/order.js              machine à étapes du parcours invité
 assets/js/kitchen.js            liste temps réel + récap agrégé
 vercel.json                     URLs propres, cache, en-têtes
 ```
 
-La page invité ne charge **aucune** dépendance externe : deux fichiers JS
-locaux, une feuille de style et une police. Le SDK Supabase (pour le temps
-réel) n'est chargé qu'à la demande sur l'écran cuisine.
+Rien n'est chargé depuis un domaine tiers : GSAP, la police et les photos
+sont tous servis par le site lui-même. Seul le SDK Supabase, nécessaire au
+temps réel, est chargé à la demande sur l'écran cuisine.
 
 ## Développer en local
 
