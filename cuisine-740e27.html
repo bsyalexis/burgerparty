@@ -65,7 +65,10 @@
               Commandes
             </button>
             <button class="tab" id="tab-tally" role="tab" aria-selected="false" type="button">
-              Récap cuisine
+              Au passe
+            </button>
+            <button class="tab" id="tab-shop" role="tab" aria-selected="false" type="button">
+              Courses
             </button>
           </div>
 
@@ -100,6 +103,33 @@
                 <div class="tally" id="tally-removed"></div>
               </div>
               <div class="stack-lg" id="tally-addons"></div>
+            </div>
+          </section>
+
+          <!-- Onglet courses : tout ce qu'il faut acheter, toutes commandes
+               confondues, servies comprises -->
+          <section id="view-shop" class="hidden" role="tabpanel" aria-labelledby="tab-shop">
+            <div class="stack-lg">
+              <div class="stack">
+                <p class="section-label">
+                  À acheter — <span id="shop-count">0</span> commandes
+                </p>
+                <div class="tally" id="shop-items"></div>
+              </div>
+
+              <div class="stack hidden" id="shop-sauces-block">
+                <p class="section-label">Sauces</p>
+                <div class="tally" id="shop-sauces"></div>
+              </div>
+
+              <div class="stack hidden" id="shop-smash-block">
+                <p class="section-label">Préparation</p>
+                <p class="lede">
+                  <strong id="shop-smash">0</strong> galettes smash à former —
+                  un steak normal en donne deux, la quantité de viande ne
+                  change pas.
+                </p>
+              </div>
             </div>
           </section>
         </div>

@@ -25,6 +25,9 @@ const NEXT_STATUS = {
 };
 const PREV_STATUS = { en_cuisine: "nouvelle", prete: "en_cuisine", servie: "prete" };
 const ACTIVE = ["nouvelle", "en_cuisine", "prete"];
+
+/** Le smash ne change pas la quantité de viande, seulement sa forme. */
+const SMASH_SLUG = "sup-smash";
 const POLL_MS = 15000;
 const LS_GATE = "bp:kitchen";
 
@@ -38,10 +41,12 @@ const el = {
   statTotal: $("stat-total"),
   statTodo: $("stat-todo"),
   statServed: $("stat-served"),
-  tabOrders: $("tab-orders"),
-  tabTally: $("tab-tally"),
-  viewOrders: $("view-orders"),
-  viewTally: $("view-tally"),
+  shopCount: $("shop-count"),
+  shopItems: $("shop-items"),
+  shopSauces: $("shop-sauces"),
+  shopSaucesBlock: $("shop-sauces-block"),
+  shopSmash: $("shop-smash"),
+  shopSmashBlock: $("shop-smash-block"),
   filterServed: $("filter-served"),
   toggleOpen: $("toggle-open"),
   orders: $("orders"),
@@ -227,6 +232,74 @@ function renderTally() {
     .join("");
 }
 
+/**
+ * Liste de courses : ce qu'il faut acheter pour honorer **toutes** les
+ * commandes, servies comprises — c'est l'inverse du récap du passe, qui ne
+ * compte que ce qui reste à faire.
+ *
+ * On part des compositions, on retire ce que chacun a enlevé, on ajoute les
+ * suppléments. Un supplément peut se compter sous un autre nom : « Double
+ * steak » gonfle la ligne « Steak » plutôt que d'en créer une à part.
+ */
+function renderShopping() {
+  const items = {};
+  const sauces = {};
+  const add = (bucket, name, n = 1) => {
+    if (!n) return;
+    bucket[name] = (bucket[name] ?? 0) + n;
+  };
+
+  const smash = state.menu.addons.find((a) => a.slug === SMASH_SLUG);
+  let smashUnits = 0; // steaks à travailler en galettes
+
+  for (const order of state.orders) {
+    const burger = state.menu.burgers.find((b) => b.slug === order.burger_slug);
+    const ingredients = burger?.ingredients ?? [];
+
+    add(items, "Pain"); // un par commande, jamais dans la composition
+
+    for (const ing of ingredients) {
+      if (!order.removed.includes(ing)) add(items, ing);
+    }
+
+    // Combien de steaks cette commande met en jeu, pour le cas du smash
+    let steaks =
+      smash &&
+      ingredients.includes(smash.counts_as) &&
+      !order.removed.includes(smash.counts_as)
+        ? 1
+        : 0;
+
+    for (const slug of order.addon_slugs) {
+      const addon = state.menu.addons.find((a) => a.slug === slug);
+      if (!addon) continue;
+
+      if (addon.category === "sauce") {
+        add(sauces, addon.name);
+        continue;
+      }
+
+      const name = addon.counts_as || addon.name;
+      const qty = Number(addon.counts_qty ?? 1);
+      add(items, name, qty);
+      if (smash && name === smash.counts_as) steaks += qty;
+    }
+
+    if (smash && order.addon_slugs.includes(SMASH_SLUG)) smashUnits += steaks;
+  }
+
+  el.shopCount.textContent = state.orders.length;
+  el.shopItems.innerHTML = state.orders.length
+    ? tallyRows(items)
+    : '<p class="empty">Aucune commande pour l\'instant.</p>';
+
+  el.shopSauces.innerHTML = tallyRows(sauces);
+  el.shopSaucesBlock.classList.toggle("hidden", !Object.keys(sauces).length);
+
+  el.shopSmash.textContent = smashUnits * 2;
+  el.shopSmashBlock.classList.toggle("hidden", !smashUnits);
+}
+
 function renderStats() {
   el.statTotal.textContent = state.orders.length;
   el.statTodo.textContent = state.orders.filter((o) =>
@@ -241,6 +314,7 @@ function renderAll() {
   renderStats();
   renderOrders();
   renderTally();
+  renderShopping();
 }
 
 /* ------------------------------------------------------------ Données */
@@ -365,16 +439,18 @@ function renderOpenToggle() {
     : "Commandes fermées";
 }
 
+const TABS = ["orders", "tally", "shop"];
+
 function selectTab(which) {
-  const isOrders = which === "orders";
-  el.tabOrders.setAttribute("aria-selected", isOrders);
-  el.tabTally.setAttribute("aria-selected", !isOrders);
-  el.viewOrders.classList.toggle("hidden", !isOrders);
-  el.viewTally.classList.toggle("hidden", isOrders);
+  for (const name of TABS) {
+    $(`tab-${name}`).setAttribute("aria-selected", String(name === which));
+    $(`view-${name}`).classList.toggle("hidden", name !== which);
+  }
 }
 
-el.tabOrders.addEventListener("click", () => selectTab("orders"));
-el.tabTally.addEventListener("click", () => selectTab("tally"));
+for (const name of TABS) {
+  $(`tab-${name}`).addEventListener("click", () => selectTab(name));
+}
 
 /* --------------------------------------------------------------- Accès */
 

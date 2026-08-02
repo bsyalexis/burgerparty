@@ -271,7 +271,11 @@ function addonChip(addon, withPlus = false) {
 /** Remplit un bloc et le masque s'il n'y a rien à montrer. */
 function fillBlock(block, list, addons, withPlus = false) {
   block.classList.toggle("hidden", addons.length === 0);
-  list.innerHTML = addons.map((a) => addonChip(a, withPlus)).join("");
+  // Le « + » ne vaut que pour ce qui s'ajoute vraiment : « En smash » change
+  // la forme du steak, il n'en rajoute pas un.
+  list.innerHTML = addons
+    .map((a) => addonChip(a, withPlus && Number(a.counts_qty ?? 1) > 0))
+    .join("");
 }
 
 function renderCustom() {

@@ -43,8 +43,11 @@ rouvre le ticket, pas un nouveau formulaire.
 - **Commandes** — une carte par commande, dans l'ordre d'arrivée. Un bouton
   fait avancer le statut : Nouvelle → En cuisine → Prête → Servie. La flèche
   revient en arrière, la croix supprime.
-- **Récap cuisine** — les totaux de ce qu'il reste à préparer : burgers,
-  cuissons, ingrédients à retirer, accompagnements, boissons.
+- **Au passe** — les totaux de ce qu'il **reste** à préparer : burgers,
+  cuissons, ingrédients à retirer, suppléments, sauces.
+- **Courses** — ce qu'il faut acheter pour honorer **toutes** les commandes,
+  servies comprises. On part des compositions, on retire ce que chacun a
+  enlevé, on ajoute les suppléments, et on compte un pain par commande.
 - **Commandes ouvertes / fermées** — coupe la prise de commande quand le
   service démarre. Les invités voient alors un écran « commandes closes ».
 
@@ -83,6 +86,12 @@ Une catégorie sans aucune ligne disparaît de l'interface toute seule — et si
 ni `side` ni `drink` n'existent, l'étape « Avec ça ? » saute entièrement. Pour
 rouvrir cette étape, il suffit d'ajouter une ligne `side` (par exemple des
 frites) : rien à redéployer.
+
+Deux colonnes servent la liste de courses. `counts_as` dit sous quel nom un
+supplément se compte — « Double steak » gonfle la ligne « Steak » au lieu d'en
+créer une à part. `counts_qty` dit combien d'unités il ajoute : `0` pour « En
+smash », qui change la forme du steak sans consommer plus de viande (un steak
+normal donne deux galettes). Une option à `0` perd aussi son « + » côté invité.
 
 La colonne `burger_slugs` restreint une option à certains burgers : vide, elle
 est proposée partout ; remplie, seulement sur les burgers listés. C'est ce qui
