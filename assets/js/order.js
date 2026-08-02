@@ -625,7 +625,7 @@ async function init() {
   const { settings } = state.menu;
   if (settings.party_name) {
     el.partyName.textContent = settings.party_name;
-    document.title = `${settings.party_name} — passe ta commande`;
+    document.title = settings.party_name;
   }
   if (settings.message) el.welcomeMessage.textContent = settings.message;
 
