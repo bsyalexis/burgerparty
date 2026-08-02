@@ -15,7 +15,6 @@ export const KITCHEN_CODE = "1808";
 /** Libellés des cuissons, partagés entre la commande et la cuisine. */
 export const COOKING = {
   saignant: "Saignant",
-  a_point: "À point",
   bien_cuit: "Bien cuit",
 };
 

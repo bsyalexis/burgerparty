@@ -106,8 +106,15 @@ function buzz(ms = 8) {
 }
 
 const addonBySlug = (slug) => state.menu.addons.find((a) => a.slug === slug);
-const addonsIn = (category) =>
-  state.menu.addons.filter((a) => a.category === category);
+
+/** Une option sans `burger_slugs` vaut pour tous les burgers. */
+const appliesTo = (addon, burger) =>
+  !addon.burger_slugs?.length || addon.burger_slugs.includes(burger?.slug);
+
+const addonsIn = (category, burger = null) =>
+  state.menu.addons.filter(
+    (a) => a.category === category && (!burger || appliesTo(a, burger)),
+  );
 const burgerBySlug = (slug) => state.menu.burgers.find((b) => b.slug === slug);
 
 /* ------------------------------------------------------------- Navigation */
@@ -283,8 +290,8 @@ function renderCustom() {
     )
     .join("");
 
-  fillBlock(el.extraBlock, el.extraList, addonsIn("extra"), true);
-  fillBlock(el.sauceBlock, el.sauceList, addonsIn("sauce"));
+  fillBlock(el.extraBlock, el.extraList, addonsIn("extra", burger), true);
+  fillBlock(el.sauceBlock, el.sauceList, addonsIn("sauce", burger));
 
   el.cookingBlock.classList.toggle("hidden", !burger.needs_cooking);
   if (burger.needs_cooking) {
@@ -491,6 +498,12 @@ el.burgerList.addEventListener("click", (e) => {
     state.burger = next;
     state.removed = new Set();
     state.cooking = null;
+
+    // Une option réservée à un autre burger ne doit pas rester cochée
+    for (const slug of state.addons) {
+      const addon = addonBySlug(slug);
+      if (addon && !appliesTo(addon, next)) state.addons.delete(slug);
+    }
   }
   // On bascule l'état sur place plutôt que de tout reconstruire : sinon
   // les cartes rejouent leur entrée en cascade à chaque sélection.

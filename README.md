@@ -65,7 +65,7 @@ Colonnes utiles de `burgers` :
 | --- | --- |
 | `name`, `tagline`, `emoji` | ce qui s'affiche sur la carte |
 | `ingredients` | tableau de texte — chaque entrée devient un bouton « retirer » |
-| `needs_cooking` | `true` = on demande la cuisson (viande rouge) |
+| `needs_cooking` | `true` = on demande la cuisson (Saignant / Bien cuit) |
 | `sort_order` | ordre d'affichage |
 | `available` | `false` = retiré du menu, sans casser les commandes déjà passées |
 
@@ -83,6 +83,11 @@ Une catégorie sans aucune ligne disparaît de l'interface toute seule — et si
 ni `side` ni `drink` n'existent, l'étape « Avec ça ? » saute entièrement. Pour
 rouvrir cette étape, il suffit d'ajouter une ligne `side` (par exemple des
 frites) : rien à redéployer.
+
+La colonne `burger_slugs` restreint une option à certains burgers : vide, elle
+est proposée partout ; remplie, seulement sur les burgers listés. C'est ce qui
+évite de proposer « Double steak » sur le burger au poulet. Si un invité coche
+une option puis change de burger, elle est décochée toute seule.
 
 La table `settings` (ligne unique) porte le nom de la soirée (`party_name`),
 un message d'accueil libre (`message`) et l'état des commandes (`orders_open`).
